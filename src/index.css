@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+@theme {
+  --color-gov-navy: #1e3a8a;
+  --color-gov-navy-dark: #16295f;
+  --color-gov-navy-deep: #0f1d45;
+  --color-gov-gold: #c9a227;
+  --color-gov-slate: #374151;
+  --color-gov-bg: #f4f5f7;
+  --font-gov: "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-gov-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-gov);
+  background: var(--color-gov-bg);
+  color: var(--color-gov-slate);
+}
+
+/* Chính quyền: không dùng transition — mọi hiệu ứng dựng bằng canvas */
+*,
+*::before,
+*::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #eceef2;
+}
+::-webkit-scrollbar-thumb {
+  background: #b9bfd0;
+  border: 2px solid #eceef2;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8f97ad;
+}
