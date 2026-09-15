@@ -1,9 +1,9 @@
 appId: com.ioc.react-web
-productName: IOC App
+productName: IOC-decentralization
 directories:
   output: release
   buildResources: build
-icon: build/icon.ico
+icon: src/assets/icon.ico
 files:
   - dist/**/*
   - electron/**/*

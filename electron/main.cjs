@@ -71,7 +71,8 @@ function createWindow() {
       nodeIntegration: false,
       webSecurity: false,
     },
-    title: 'IOC App',
+    title: 'IOC-decentralization',
+    icon: path.join(__dirname, 'src/assets/icon.ico')
   });
 
   mainWindow.setMenuBarVisibility(false);
