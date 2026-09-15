@@ -9,8 +9,8 @@ files:
   - electron/**/*
 publish:
   provider: github
-  owner: libra-an
-  repo: phan_quyen_ioc
+  owner: Khunglongtocxu
+  repo: IOC_decentralization
   releaseType: release
 win:
   target:
