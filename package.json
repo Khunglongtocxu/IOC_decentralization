@@ -1,7 +1,7 @@
 {
   "name": "ioc-react-web",
   "private": true,
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Hệ thống Quản lý Phân quyền IOC",
   "author": "libra-an",
   "type": "module",
