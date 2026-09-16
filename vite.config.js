@@ -9,7 +9,7 @@ export default defineConfig({
     open : true,
     proxy: {
       '/api-eioc': {
-        target: 'https://kyta.fpt.com/eioc',
+        target: 'https://iocthads.moj.gov.vn/',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api-eioc/, ''),
       },
