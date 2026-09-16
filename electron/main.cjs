@@ -71,7 +71,7 @@ function createWindow() {
       nodeIntegration: false,
       webSecurity: false,
     },
-    title: 'IOC-decentralization',
+    title: 'IOC decentralization',
     icon: path.join(__dirname, 'src/assets/icon.ico')
   });
 

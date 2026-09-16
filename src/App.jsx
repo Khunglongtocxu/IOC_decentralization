@@ -37,7 +37,7 @@ function App() {
           </div>
           <div className="hidden min-w-0 xl:block">
             <p className="text-[10px] font-medium tracking-[0.18em] text-white/60 uppercase">
-              Trung tâm dữ liệu IOC
+              IOC decentralization
             </p>
             <p className="truncate text-xs font-bold tracking-wide text-white uppercase">
               Hệ thống Quản lý Phân quyền
@@ -88,7 +88,7 @@ function App() {
       </div>
 
       <footer className="shrink-0 border-t border-white/10 bg-gov-navy-deep px-6 py-2 text-center text-[10px] tracking-wider text-white/40 uppercase">
-        © 2026 Trung tâm dữ liệu IOC — Hệ thống quản lý phân quyền · Mọi thao tác được ghi nhật ký kiểm toán
+        
       </footer>
     </div>
   )
