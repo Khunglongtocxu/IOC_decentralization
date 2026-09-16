@@ -4,7 +4,7 @@ import axios from "axios";
 const isElectron = window.location.protocol === 'file:';
 
 const apiClient = axios.create({
-    baseURL: isElectron ? 'https://kyta.fpt.com/eioc' : '/api-eioc',
+    baseURL: isElectron ? 'https://iocthads.moj.gov.vn/' : '/api-eioc',
     headers: { 'Content-Type': 'application/json' }
 });
 
