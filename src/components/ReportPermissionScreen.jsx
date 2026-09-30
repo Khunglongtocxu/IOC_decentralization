@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import {
   ShieldCheck, ShieldOff, BarChart3, Users, ScrollText,
   Copy, Trash2, CheckCircle2, XCircle, AlertTriangle, Search,
-  Activity, ListChecks, Mail, ChevronRight, BadgeCheck, RefreshCw, Sparkles,
+  Activity, ListChecks, Mail, ChevronRight, BadgeCheck, RefreshCw, Sparkles, House,
 } from 'lucide-react'
 import apiClient from '../api/axiosConfig'
 
@@ -11,6 +11,8 @@ const ROLES = [
   { value: 'v', label: 'Người xem', perm: 'Perm: v' },
   { value: 'e', label: 'Người chỉnh sửa', perm: 'Perm: e' },
 ]
+
+const ACTION_VERB = { grant: 'CẤP QUYỀN', revoke: 'GỠ QUYỀN', home: 'ĐẶT TRANG CHỦ' }
 
 const INIT_LOGS = [
   { time: '09:00:00', type: 'info', msg: 'Sẵn sàng. Danh sách báo cáo được tải trực tiếp từ hệ thống.' },
@@ -64,7 +66,7 @@ function readCache() {
 }
 
 /* ══════════════ Hộp thoại xác nhận ══════════════ */
-function ConfirmDialog({ open, title, lines, confirmLabel, confirmClass, onConfirm, onCancel }) {
+export function ConfirmDialog({ open, title, lines, confirmLabel, confirmClass, onConfirm, onCancel }) {
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gov-navy-deep/60">
@@ -104,7 +106,7 @@ function ConfirmDialog({ open, title, lines, confirmLabel, confirmClass, onConfi
 }
 
 /* ══════════════ Toast ══════════════ */
-function ToastStack({ toasts, onDismiss }) {
+export function ToastStack({ toasts, onDismiss }) {
   if (!toasts.length) return null
   return (
     <div className="fixed right-5 top-5 z-50 flex w-96 max-w-[90vw] flex-col gap-2">
@@ -175,7 +177,11 @@ export default function ReportPermissionScreen() {
   const busyRef = useRef(false)
   const logEndRef = useRef(null)
 
-  useEffect(() => { logEndRef.current?.scrollIntoView() }, [logs])
+  // Chỉ cuộn khung nhật ký — scrollIntoView sẽ kéo cả màn hình xuống theo
+  useEffect(() => {
+    const box = logEndRef.current?.parentElement
+    if (box) box.scrollTop = box.scrollHeight
+  }, [logs])
 
   const pushToast = (type, title, msg) => {
     const id = Math.random().toString(36).slice(2)
@@ -295,6 +301,12 @@ export default function ReportPermissionScreen() {
       pushToast('error', 'Thiếu dữ liệu đầu vào', 'Cần chọn báo cáo và nhập email trước khi thực thi.')
       return
     }
+    // Mỗi tài khoản chỉ có 1 trang chủ → bắt buộc chọn đúng 1 báo cáo
+    if (action === 'home' && selected.length !== 1) {
+      addLog('error', `⚠ Đặt trang chủ cần chọn đúng 1 báo cáo (đang chọn ${selected.length}).`)
+      pushToast('error', 'Chọn đúng 1 báo cáo', 'Mỗi tài khoản chỉ đặt được 1 báo cáo làm trang chủ.')
+      return
+    }
     setConfirm({ action })
   }
 
@@ -306,11 +318,13 @@ export default function ReportPermissionScreen() {
     const list = emails.split('\n').map((e) => e.trim()).filter(Boolean)
     const targets = [...selected]
     const roleLabel = ROLES.find((r) => r.value === perm)?.label ?? perm
-    const verb = action === 'grant' ? 'CẤP QUYỀN' : 'GỠ QUYỀN'
+    const verb = ACTION_VERB[action]
     setIsProcessing(true)
     busyRef.current = true
     setFailedEmails([])
-    addLog('info', `→ Bắt đầu ${verb} | ${list.length} email × ${targets.length} báo cáo | [${roleLabel}]`)
+    addLog('info', action === 'home'
+      ? `→ Bắt đầu ${verb} | ${list.length} email | [${reports.find((r) => r.id === targets[0])?.name ?? targets[0]}]`
+      : `→ Bắt đầu ${verb} | ${list.length} email × ${targets.length} báo cáo | [${roleLabel}]`)
 
     const failed = []
     let doneCount = 0
@@ -331,6 +345,25 @@ export default function ReportPermissionScreen() {
         failed.push(email)
         setFailedEmails([...failed])
         addLog('error', `  ✘ Không tra cứu được "${email}": ${error?.response ? `HTTP ${error.response.status}` : error.message}`)
+        continue
+      }
+
+      /* Đặt trang chủ: POST ioc-metadata/api/dashboard-home-configs
+         { assigneeId, assigneeType:0, config: JSON-string {id, name, type:'share'} } */
+      if (action === 'home') {
+        const report = reports.find((r) => r.id === targets[0])
+        const reportName = report?.name || targets[0]
+        try {
+          await apiClient.post('/services/ioc-metadata/api/dashboard-home-configs', {
+            assigneeId: row.resourceId,
+            assigneeType: 0,
+            config: JSON.stringify({ id: targets[0], name: reportName, type: 'share' }),
+          })
+          addLog('success', `    ✓ Trang chủ → ${reportName}`)
+        } catch (err) {
+          addLog('error', `    ✗ Trang chủ → ${reportName} — ${err.response?.data?.message || (err.response ? `HTTP ${err.response.status}` : err.message)}`)
+        }
+        doneCount += 1
         continue
       }
 
@@ -376,7 +409,7 @@ export default function ReportPermissionScreen() {
       }
     }
 
-    const totalProcessed = targets.length * list.length
+    const totalProcessed = action === 'home' ? list.length : targets.length * list.length
     addLog('success', `✔ Hoàn thành. Đã xử lý ${totalProcessed} bản ghi (${doneCount} lượt gọi).`)
     if (failed.length) {
       addLog('error', `⚠ Có ${failed.length} email không tra cứu được. Xem danh sách phía dưới để copy kiểm tra.`)
@@ -392,23 +425,34 @@ export default function ReportPermissionScreen() {
   }, [emails, perm, selected, reports])
 
   const roleLabel = ROLES.find((r) => r.value === perm)?.label ?? perm
-  const verb = confirm?.action === 'revoke' ? 'GỠ QUYỀN' : 'CẤP QUYỀN'
+  const verb = ACTION_VERB[confirm?.action] ?? ACTION_VERB.grant
+  const homeReport = selected.length === 1 ? reports.find((r) => r.id === selected[0]) : null
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-gov-bg">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-gov-bg">
 
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
 
       <ConfirmDialog
         open={!!confirm}
         title={`Xác nhận ${verb} biểu đồ báo cáo`}
-        lines={[
-          `Đối tượng: ${emailList.length} tài khoản email`,
-          `Phạm vi: ${selected.length} báo cáo được chọn`,
-          `Quyền áp dụng: ${roleLabel} (Perm: ${perm})`,
-        ]}
+        lines={confirm?.action === 'home'
+          ? [
+              `Đối tượng: ${emailList.length} tài khoản email`,
+              `Trang chủ mới: ${homeReport?.name ?? selected[0]}`,
+              'Trang chủ hiện tại của các tài khoản này sẽ bị thay thế.',
+            ]
+          : [
+              `Đối tượng: ${emailList.length} tài khoản email`,
+              `Phạm vi: ${selected.length} báo cáo được chọn`,
+              `Quyền áp dụng: ${roleLabel} (Perm: ${perm})`,
+            ]}
         confirmLabel={` Đồng ý ${verb}`}
-        confirmClass={confirm?.action === 'revoke' ? 'bg-red-800 hover:bg-red-900' : 'bg-gov-navy hover:bg-gov-navy-dark'}
+        confirmClass={
+          confirm?.action === 'revoke' ? 'bg-red-800 hover:bg-red-900'
+            : confirm?.action === 'home' ? 'bg-teal-700 hover:bg-teal-800'
+              : 'bg-gov-navy hover:bg-gov-navy-dark'
+        }
         onConfirm={() => execute(confirm.action)}
         onCancel={() => setConfirm(null)}
       />
@@ -422,10 +466,10 @@ export default function ReportPermissionScreen() {
       </section>
 
       {/* ══ Main: Danh sách (trái) — Chi tiết (phải) ══ */}
-      <main className="mx-auto grid w-full max-w-[1600px] min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto px-6 pb-6 lg:grid-cols-[minmax(380px,2fr)_minmax(420px,3fr)]">
+      <main className="mx-auto grid w-full lg:min-h-[600px] max-w-[1600px] flex-1 grid-cols-1 gap-4 px-6 pb-6 lg:grid-cols-[minmax(380px,2fr)_minmax(420px,3fr)]">
 
         {/* ── Trái: danh sách báo cáo (tải trực tiếp từ hệ thống) ── */}
-        <section className="flex min-h-0 flex-col overflow-hidden border border-gray-200 bg-white shadow-sm">
+        <section className="flex max-h-[75vh] min-h-[460px] flex-col overflow-hidden border border-gray-200 bg-white shadow-sm lg:max-h-none lg:min-h-0">
           <div className="flex items-center gap-3 border-b-2 border-gov-navy bg-gray-50 px-4 py-3">
             <BarChart3 className="h-4 w-4 text-gov-navy" />
             <h2 className="text-sm font-bold tracking-wider text-gov-navy uppercase">
@@ -562,7 +606,7 @@ export default function ReportPermissionScreen() {
         </section>
 
         {/* ── Phải: tác vụ + nhật ký ── */}
-        <div className="flex min-h-0 flex-col gap-4">
+        <div className="flex flex-col gap-4 lg:min-h-0">
 
           {/* Tác vụ */}
           <section className="border border-gray-200 bg-white shadow-sm">
@@ -647,7 +691,21 @@ export default function ReportPermissionScreen() {
                     <ShieldOff className="h-5 w-5" />
                     Gỡ quyền
                   </button>
+                  <button
+                    onClick={() => askExecute('home')}
+                    disabled={isProcessing}
+                    title="Đặt báo cáo đang chọn (đúng 1 báo cáo) làm trang chủ cho các email đã nhập"
+                    className="col-span-2 flex items-center justify-center gap-2 border border-teal-900 bg-teal-700 px-4 py-3 text-sm font-bold tracking-wider text-white uppercase hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <House className="h-5 w-5" />
+                    Đặt làm trang chủ
+                  </button>
                 </div>
+                <p className="mt-1.5 text-xs text-gray-500">
+                  {homeReport
+                    ? <>Trang chủ sẽ đặt: <span className="font-semibold text-gov-slate">{homeReport.name}</span></>
+                    : 'Đặt trang chủ: chọn đúng 1 báo cáo ở danh mục bên trái.'}
+                </p>
               </div>
             </div>
 
@@ -690,7 +748,7 @@ export default function ReportPermissionScreen() {
           </section>
 
           {/* Nhật ký kiểm toán */}
-          <section className="flex min-h-0 flex-1 flex-col border border-gray-200 bg-white shadow-sm">
+          <section className="flex min-h-[300px] flex-1 flex-col border border-gray-200 bg-white shadow-sm lg:min-h-0">
             <div className="flex items-center gap-3 border-b-2 border-gov-navy bg-gray-50 px-4 py-3">
               <ScrollText className="h-4 w-4 text-gov-navy" />
               <h2 className="text-sm font-bold tracking-wider text-gov-navy uppercase">

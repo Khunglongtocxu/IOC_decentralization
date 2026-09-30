@@ -1,15 +1,6 @@
 @import "tailwindcss";
 
-@theme {
-  --color-gov-navy: #1e3a8a;
-  --color-gov-navy-dark: #16295f;
-  --color-gov-navy-deep: #0f1d45;
-  --color-gov-gold: #c9a227;
-  --color-gov-slate: #374151;
-  --color-gov-bg: #f4f5f7;
-  --font-gov: "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-gov-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
-}
+@import "./theme.css";
 
 html,
 body,

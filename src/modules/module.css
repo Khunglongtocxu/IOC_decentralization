@@ -1,0 +1,16 @@
+/* CSS cho module App FPT-IS: chỉ quét src/, không đặt style lên html/body của app chủ */
+@import "tailwindcss" source("../");
+@import "../theme.css";
+
+.ioc-module {
+  font-family: var(--font-gov);
+  color: var(--color-gov-slate);
+}
+
+/* Giống app: không dùng transition/animation — chỉ áp trong phạm vi module */
+.ioc-module *,
+.ioc-module *::before,
+.ioc-module *::after {
+  transition: none !important;
+  animation: none !important;
+}

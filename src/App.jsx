@@ -1,17 +1,19 @@
 import { useState } from 'react'
-import { FileText, Users, Landmark, UserCheck, BarChart3, Lock, ListChecks } from 'lucide-react'
+import { FileText, Users, Landmark, UserCheck, BarChart3, ListChecks, Gauge } from 'lucide-react'
 import PermissionScreen from './components/PermissionScreen'
 import UserPermissionScreen from './components/UserPermissionScreen'
 import IOCPermissionChecker from './components/IOCPermissionChecker'
 import ReportPermissionScreen from './components/ReportPermissionScreen'
-import ReportAccessGate from './components/ReportAccessGate'
+import KpiPermissionScreen from './components/KpiPermissionScreen'
 import UpdateChecker from './components/UpdateChecker'
+import ModuleDownload from './components/ModuleDownload'
 import FormPermissionChecker from './components/FormPermissionChecker'
 import './index.css'
 
 const TABS = [
   { id: 'forms', label: 'Phân quyền biểu mẫu', icon: FileText },
   { id: 'reports', label: 'Phân quyền biểu đồ báo cáo', icon: BarChart3 },
+  { id: 'kpis', label: 'Phân quyền chỉ số', icon: Gauge },
   { id: 'users', label: 'Phân quyền người dùng IOC', icon: Users },
   { id: 'check', label: 'Kiểm tra tài khoản IOC', icon: UserCheck },
   { id: 'checkforms', label: 'Kiểm tra quyền biểu mẫu', icon: ListChecks },
@@ -19,12 +21,6 @@ const TABS = [
 
 function App() {
   const [tab, setTab] = useState('forms')
-  // Màn "Phân quyền biểu đồ báo cáo" bị khóa — chỉ vào được sau khi nhập mã khóa
-  // (ghi nhớ theo phiên làm việc; khởi động lại ứng dụng phải nhập lại)
-  const [reportUnlocked, setReportUnlocked] = useState(
-    () => sessionStorage.getItem('report_unlocked') === '1'
-  )
-  const unlockReport = () => setReportUnlocked(true)
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gov-bg">
@@ -62,9 +58,6 @@ function App() {
               >
                 <Icon className="h-4 w-4" />
                 <span className="hidden md:inline">{label}</span>
-                {id === 'reports' && !reportUnlocked && (
-                  <Lock className="h-3 w-3 opacity-70" aria-label="Đã khóa" />
-                )}
               </button>
             )
           })}
@@ -72,16 +65,15 @@ function App() {
 
         <div className="flex-1" />
 
+        <ModuleDownload />
         <UpdateChecker />
       </div>
 
       {/* ══ Nội dung tab đang chọn ══ */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {tab === 'forms' ? <PermissionScreen />
-          : tab === 'reports'
-            ? reportUnlocked
-              ? <ReportPermissionScreen />
-              : <ReportAccessGate onUnlock={unlockReport} onBack={() => setTab('forms')} />
+          : tab === 'reports' ? <ReportPermissionScreen />
+            : tab === 'kpis' ? <KpiPermissionScreen />
             : tab === 'check' ? <IOCPermissionChecker />
             : tab === 'checkforms' ? <FormPermissionChecker />
             : <UserPermissionScreen />}

@@ -189,7 +189,9 @@ export default function PermissionScreen() {
   const logEndRef = useRef(null)
 
   useEffect(() => {
-    logEndRef.current?.scrollIntoView()
+    // Chỉ cuộn khung nhật ký — scrollIntoView sẽ kéo cả màn hình xuống theo
+    const box = logEndRef.current?.parentElement
+    if (box) box.scrollTop = box.scrollHeight
   }, [logs])
 
   const pushToast = (type, title, msg) => {
@@ -428,7 +430,7 @@ export default function PermissionScreen() {
   const verb = confirm?.action === 'revoke' ? 'GỠ QUYỀN' : 'CẤP QUYỀN'
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-gov-bg">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-gov-bg">
 
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
 
@@ -456,10 +458,10 @@ export default function PermissionScreen() {
       </section>
 
       {/* ══ Main: Danh sách (trái) — Chi tiết (phải) ══ */}
-      <main className="mx-auto grid w-full max-w-[1600px] min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto px-6 pb-6 lg:grid-cols-[minmax(380px,2fr)_minmax(420px,3fr)]">
+      <main className="mx-auto grid w-full lg:min-h-[600px] max-w-[1600px] flex-1 grid-cols-1 gap-4 px-6 pb-6 lg:grid-cols-[minmax(380px,2fr)_minmax(420px,3fr)]">
 
         {/* ── Trái: danh sách biểu mẫu ── */}
-        <section className="flex min-h-0 flex-col overflow-hidden border border-gray-200 bg-white shadow-sm">
+        <section className="flex max-h-[75vh] min-h-[460px] flex-col overflow-hidden border border-gray-200 bg-white shadow-sm lg:max-h-none lg:min-h-0">
           <div className="flex items-center gap-3 border-b-2 border-gov-navy bg-gray-50 px-4 py-3">
             <FileText className="h-4 w-4 text-gov-navy" />
             <h2 className="text-sm font-bold tracking-wider text-gov-navy uppercase">
@@ -549,7 +551,7 @@ export default function PermissionScreen() {
         </section>
 
         {/* ── Phải: tác vụ + nhật ký ── */}
-        <div className="flex min-h-0 flex-col gap-4">
+        <div className="flex flex-col gap-4 lg:min-h-0">
 
           {/* Tác vụ */}
           <section className="border border-gray-200 bg-white shadow-sm">
@@ -677,7 +679,7 @@ export default function PermissionScreen() {
           </section>
 
           {/* Nhật ký kiểm toán */}
-          <section className="flex min-h-0 flex-1 flex-col border border-gray-200 bg-white shadow-sm">
+          <section className="flex min-h-[300px] flex-1 flex-col border border-gray-200 bg-white shadow-sm lg:min-h-0">
             <div className="flex items-center gap-3 border-b-2 border-gov-navy bg-gray-50 px-4 py-3">
               <ScrollText className="h-4 w-4 text-gov-navy" />
               <h2 className="text-sm font-bold tracking-wider text-gov-navy uppercase">

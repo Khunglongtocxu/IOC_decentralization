@@ -1,4 +1,5 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { autoUpdater } = require('electron-updater');
@@ -57,6 +58,30 @@ ipcMain.handle('app-info', () => ({
   packaged: app.isPackaged,
 }));
 ipcMain.handle('system:hostname', () => os.hostname());
+
+/* ══════════════ Tải module zip cho App FPT-IS (dist/modules/ sinh lúc build) ══════════════ */
+// file:// không tải bằng thẻ <a download> được → đọc file trong gói app rồi ghi ra nơi người dùng chọn
+ipcMain.handle('modules:save', async (_event, fileName) => {
+  // Chỉ nhận đúng tên file module → không đọc được file khác trong gói app
+  if (typeof fileName !== 'string' || !/^[a-z0-9-]+-\d+\.\d+\.\d+\.zip$/.test(fileName)) {
+    return { ok: false, reason: 'Tên file module không hợp lệ.' };
+  }
+  let data;
+  try {
+    data = await fs.promises.readFile(path.join(__dirname, '..', 'dist', 'modules', fileName));
+  } catch {
+    return { ok: false, reason: 'Bản cài này chưa kèm file module.' };
+  }
+  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+    title: 'Lưu module App FPT-IS',
+    defaultPath: path.join(app.getPath('downloads'), fileName),
+    filters: [{ name: 'Zip', extensions: ['zip'] }],
+  });
+  if (canceled || !filePath) return { ok: false, canceled: true };
+  await fs.promises.writeFile(filePath, data);
+  shell.showItemInFolder(filePath);
+  return { ok: true, filePath };
+});
 
 /* ══════════════ Cửa sổ ứng dụng ══════════════ */
 function createWindow() {
