@@ -1,7 +1,7 @@
 {
   "name": "ioc-react-web",
   "private": true,
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Hệ thống Quản lý Phân quyền IOC",
   "author": "Khunglongtocxu",
   "type": "module",
