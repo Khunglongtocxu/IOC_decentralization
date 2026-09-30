@@ -4,6 +4,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   isElectron: true,
   appInfo: () => ipcRenderer.invoke('app-info'),
   hostname: () => ipcRenderer.invoke('system:hostname'),
+  saveModule: (fileName) => ipcRenderer.invoke('modules:save', fileName),
   updates: {
     check: () => ipcRenderer.invoke('updates:check'),
     download: () => ipcRenderer.invoke('updates:download'),

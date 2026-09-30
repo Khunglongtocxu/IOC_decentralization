@@ -2,6 +2,7 @@
 // Gửi từng dòng đến Google Apps Script Web App.
 // Dùng GET + query params + mode no-cors (simple request, không preflight CORS)
 // — Apps Script nhận dữ liệu qua doGet(e) → e.parameter.
+import { backendInvoke } from '../modules/transport'
 
 const SHEET_WEBAPP_URL =
   'https://script.google.com/macros/s/AKfycbyZtpfKpWUQVg_6TQ5ugKw1nc5gtVdgNvJ6MZTn8kLCNmy63n7-zEYobHqz5gLZUoJyQQ/exec'
@@ -25,6 +26,11 @@ function sendEntry(entry) {
   // Thử tối đa 3 lần (cách nhau 2s, 4s) — Web App có lúc bận/đang thay phiên bản
   // khiến request fail; no-cors không đọc được lỗi nên chỉ thử lại khi fetch ném lỗi mạng
   return (async () => {
+    // Module App FPT-IS: gửi qua backend (renderer của app chủ có thể chặn request ra ngoài)
+    if (__IOC_MODULE__) {
+      await backendInvoke('fire', { url: `${entry.url}?${params}` })
+      return
+    }
     for (let i = 0; i < 3; i++) {
       try {
         await fetch(`${entry.url}?${params}`, { method: 'GET', mode: 'no-cors' })

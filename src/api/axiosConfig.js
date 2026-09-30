@@ -1,11 +1,15 @@
 import axios from "axios";
+import { moduleAdapter, backendInvoke } from "../modules/transport";
 
 // Khi đóng gói Electron (file://) không có Vite proxy → dùng URL trực tiếp
 const isElectron = window.location.protocol === 'file:';
 
+// Module App FPT-IS (__IOC_MODULE__): request đi qua backend main.js — backend tự đăng nhập,
+// gắn token và thử lại khi 401, nên renderer bỏ qua phần token bên dưới
 const apiClient = axios.create({
-    baseURL: isElectron ? 'https://iocthads.moj.gov.vn/' : '/api-eioc',
-    headers: { 'Content-Type': 'application/json' }
+    baseURL: __IOC_MODULE__ || isElectron ? 'https://iocthads.moj.gov.vn/' : '/api-eioc',
+    headers: { 'Content-Type': 'application/json' },
+    ...(__IOC_MODULE__ ? { adapter: moduleAdapter } : {}),
 });
 
 const LOGIN_URL = isElectron ? 'https://eaccount.kyta.fpt.com/auth/login' : '/api-auth/auth/login';
@@ -15,7 +19,7 @@ const ADMIN_ACCOUNT = {
     password: "admin@123"
 };
 
-let currentAccessToken = localStorage.getItem('access_token') || null;
+let currentAccessToken = __IOC_MODULE__ ? null : (localStorage.getItem('access_token') || null);
 let isRefreshing = false;
 
 export const getAccessToken = () => currentAccessToken;
@@ -39,7 +43,9 @@ let cachedOperator = null;
 export async function getOperatorAccount() {
     if (cachedOperator) return cachedOperator;
     try {
-        if (window.electronAPI?.hostname) {
+        if (__IOC_MODULE__) {
+            cachedOperator = await backendInvoke('hostname');
+        } else if (window.electronAPI?.hostname) {
             cachedOperator = await window.electronAPI.hostname();
         }
     } catch { /* bỏ qua, dùng phương án dự phòng bên dưới */ }
@@ -58,7 +64,7 @@ apiClient.interceptors.response.use(
     res => res,
     async error => {
         const originalRequest = error.config;
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (!__IOC_MODULE__ && error.response?.status === 401 && !originalRequest._retry) {
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
                     setTimeout(() => resolve(apiClient(originalRequest)), 500);
@@ -93,7 +99,7 @@ export async function autoLogin() {
     }
 }
 
-if (!currentAccessToken) {
+if (!__IOC_MODULE__ && !currentAccessToken) {
     autoLogin();
 }
 

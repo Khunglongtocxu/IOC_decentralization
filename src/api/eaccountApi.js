@@ -1,13 +1,16 @@
 import axios from "axios";
 import { getAccessToken, autoLogin } from "./axiosConfig";
+import { moduleAdapter } from "../modules/transport";
 
 // API eaccount (tìm policy, chi tiết user) — tách instance riêng vì khác base URL với apiClient
 // Khi đóng gói Electron (file://) không có Vite proxy → dùng URL trực tiếp
 const isElectron = window.location.protocol === 'file:';
 
 const eaccountClient = axios.create({
-    baseURL: isElectron ? 'https://eaccount.kyta.fpt.com' : '/api-eaccount',
-    headers: { 'Content-Type': 'application/json' }
+    baseURL: __IOC_MODULE__ || isElectron ? 'https://eaccount.kyta.fpt.com' : '/api-eaccount',
+    headers: { 'Content-Type': 'application/json' },
+    // Module App FPT-IS: đi qua backend main.js (tự gắn token / đăng nhập lại)
+    ...(__IOC_MODULE__ ? { adapter: moduleAdapter } : {}),
 });
 
 eaccountClient.interceptors.request.use(config => {
@@ -23,7 +26,7 @@ eaccountClient.interceptors.response.use(
     res => res,
     async error => {
         const originalRequest = error.config;
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (!__IOC_MODULE__ && error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
             try {
                 await autoLogin();

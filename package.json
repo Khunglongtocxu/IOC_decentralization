@@ -1,19 +1,20 @@
 {
   "name": "ioc-react-web",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.0.6",
   "description": "Hệ thống Quản lý Phân quyền IOC",
   "author": "Khunglongtocxu",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/build-modules.mjs",
     "lint": "oxlint",
     "preview": "vite preview",
     "electron:dev": "vite",
-    "electron:build": "vite build && electron-builder --win",
-    "electron:publish": "vite build && electron-builder --win --publish always"
+    "electron:build": "npm run build && electron-builder --win",
+    "electron:publish": "npm run build && electron-builder --win --publish always",
+    "build:modules": "node scripts/build-modules.mjs"
   },
   "dependencies": {
     "axios": "^1.20.0",
@@ -29,6 +30,7 @@
     "@vitejs/plugin-react": "^6.0.4",
     "electron": "^33.0.0",
     "electron-builder": "^25.1.8",
+    "fflate": "^0.8.3",
     "oxlint": "^1.75.0",
     "png-to-ico": "^3.0.2",
     "sharp": "^0.35.3",
