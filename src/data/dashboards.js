@@ -1,4 +1,7 @@
 export const DASHBOARD_LIST = [
+    { id: "000061N1IxUNmn26OJlczKrB", name: "Tiền đấu giá thành/BM23" },
+    { id: "0000614XIwcdKaPdRKOs3kNR", name: "Việc đấu giá thành (Tỉnh)/BM22" },
+    { id: "000061w9IoiEnxQlPk6CrNak", name: "Kiến nghị kháng nghị/BM21" },
     { id: "000061ENIXhrQgRMxMKUmbyq", name: "Án tham nhũng kinh tế ban chỉ đạo theo dõi/BM20" },
     { id: "000061JlIAi4A1rDnJrIvpVW", name: "Bồi thường nhà nước và bảo đảm tài chính (Tỉnh)/BM19" },
     { id: "000061ENIgtrX9qP4Dvumbyq", name: "Cưỡng chế THADS/BM10" },
