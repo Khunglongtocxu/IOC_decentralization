@@ -17,7 +17,9 @@ win:
     - nsis
   signAndEditExecutable: false
 nsis:
-  oneClick: false
-  allowToChangeInstallationDirectory: true
+  # One-click: không hiện wizard (chọn user/thư mục) → cài đặt/cập nhật chạy thẳng rồi mở app
+  oneClick: true
+  perMachine: false
+  runAfterFinish: true
   createDesktopShortcut: true
   shortcutName: IOC App
