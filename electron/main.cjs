@@ -52,7 +52,11 @@ ipcMain.handle('updates:check', async () => {
 });
 
 ipcMain.handle('updates:download', () => autoUpdater.downloadUpdate());
-ipcMain.handle('updates:install', () => autoUpdater.quitAndInstall());
+// isSilent=true: chạy bộ cài NSIS ở chế độ im lặng (/S) → không hiện wizard cài đặt
+// isForceRunAfter=true: cài xong tự mở lại app
+ipcMain.handle('updates:install', () => {
+  setImmediate(() => autoUpdater.quitAndInstall(true, true));
+});
 ipcMain.handle('app-info', () => ({
   version: app.getVersion(),
   packaged: app.isPackaged,
